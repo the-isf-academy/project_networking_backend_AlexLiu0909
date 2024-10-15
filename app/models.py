@@ -19,3 +19,4 @@ class TOD(Model):
     def change_statement(self, new_statement):
         self.statement = new_statement
         self.save()
+        
