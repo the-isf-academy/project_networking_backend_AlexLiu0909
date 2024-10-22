@@ -76,30 +76,42 @@ def archive_tod(args):
         return {'archived_tod': archive_tod.json_response()}
 
     else: 
-        return {'error': 'No fortune exists'}
+        return {'error': 'No truth or dare exists'}
 
 @route_get(BASE_URL + 'all/truth')
 def all_truths(args):
     truth_list = []
+    if TOD.objects.filter(truth = True).exists():
 
-    for tods in TOD.objects.filter(truth = True).filter(archive = False):
-        truth_list.append(tods.json_response())
-        
-    return {'all_truths': truth_list}
+        for tods in TOD.objects.filter(truth = True).filter(archive = False):
+            truth_list.append(tods.json_response())
+            
+        return {'all_truths': truth_list}
+
+    else:
+        return {'error': 'No truth statements found'}
 
 @route_get(BASE_URL + 'all/dare')
 def all_dares(args):
     dare_list = []
+    if TOD.objects.filter(dare = True).exists():
 
-    for tods in TOD.objects.filter(dare = True).filter(archive = False):
-        dare_list.append(tods.json_response())
-        
-    return {'all_dares': dare_list}
+        for tods in TOD.objects.filter(dare = True).filter(archive = False):
+            dare_list.append(tods.json_response())
+            
+        return {'all_dares': dare_list}
+
+    else:
+        return {'error': 'No dare statements found'}
 
 @route_get(BASE_URL + 'search', args={'keyword':str})
 def search_tods(args):
     search_list = []
-    for search in TOD.objects.filter(statement__contains = args['keyword']).filter(archive = False):
-        search_list.append(search.json_response())
+    if TOD.objects.filter(statement__contains = args['keyword']).exists():
+        for search in TOD.objects.filter(statement__contains = args['keyword']).filter(archive = False):
+            search_list.append(search.json_response())
 
-    return {'search_list': search_list}
+        return {'search_list': search_list}
+
+    else:
+        return {'search_list': 'No truth or dare exists'}
