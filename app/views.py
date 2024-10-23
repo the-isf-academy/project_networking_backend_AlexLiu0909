@@ -19,14 +19,24 @@ def new_tod(args):
 
     return {'new_truth_or_dare': new_tod.json_response()}
 
-@route_get(BASE_URL + 'all')
+# @route_get(BASE_URL + 'all')
+# def all_tod(args):
+#     tods_list = []
+
+#     for tod in TOD.objects.filter(reject = False):
+#         tods_list.append(tod.json_response())
+
+#     return {'all_truths_or_dares': tods_list}
+
+@route_get(BASE_URL + 'all', args={'must_complete': bool})
 def all_tod(args):
     tods_list = []
 
-    for tod in TOD.objects.filter(reject = False):
+    for tod in TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
         tods_list.append(tod.json_response())
 
     return {'all_truths_or_dares': tods_list}
+
 
 @route_get(BASE_URL + 'one', args={'id': int})
 def one_tod(args):
@@ -39,11 +49,11 @@ def one_tod(args):
     else:
         return {'error': 'No truth or dare exists'}
 
-@route_get(BASE_URL + 'random')
+@route_get(BASE_URL + 'random', args={'must_complete': bool})
 def random_tod(args):
     
-    if TOD.objects.filter(reject = False):
-        random_tod = TOD.objects.filter(reject = False).order_by('?').first()
+    if TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
+        random_tod = TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']).order_by('?').first()
         return {'random_truth_or_dare': random_tod.json_response()}
 
     else: 
@@ -87,12 +97,12 @@ def reject_tod(args):
     else: 
         return {'error': 'No truth or dare exists'}
 
-@route_get(BASE_URL + 'all/truth')
+@route_get(BASE_URL + 'all/truth', args={'must_complete': bool})
 def all_truths(args):
     truth_list = []
-    if TOD.objects.filter(truth = True).exists():
+    if TOD.objects.filter(truth = True).filter(must_complete = args['must_complete']).exists():
 
-        for tods in TOD.objects.filter(truth = True).filter(reject = False):
+        for tods in TOD.objects.filter(truth = True).filter(reject = False).filter(must_complete = args['must_complete']):
             truth_list.append(tods.json_response())
             
         return {'all_truths': truth_list}
@@ -100,12 +110,12 @@ def all_truths(args):
     else:
         return {'error': 'No truth statements found'}
 
-@route_get(BASE_URL + 'all/dare')
+@route_get(BASE_URL + 'all/dare', args={'must_complete': bool})
 def all_dares(args):
     dare_list = []
-    if TOD.objects.filter(dare = True).exists():
+    if TOD.objects.filter(dare = True).filter(must_complete = args['must_complete']).exists():
 
-        for tods in TOD.objects.filter(dare = True).filter(reject = False):
+        for tods in TOD.objects.filter(dare = True).filter(reject = False).filter(must_complete = args['must_complete']):
             dare_list.append(tods.json_response())
             
         return {'all_dares': dare_list}

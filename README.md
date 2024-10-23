@@ -107,8 +107,6 @@ Here is a table summarizing the meaning and usage of each method.
 ### Endpoints
 In the views.py file, there are 10 endpoints in total. 
 
----
-
 1. **`/new`**
 ```
 @route_post(BASE_URL + 'new', args={'statement':str, 'truth':bool, 'dare':bool})
@@ -143,14 +141,14 @@ def new_tod(args):
 
 2. **`/all`**
 ```
-@route_get(BASE_URL + 'all')
+@route_get(BASE_URL + 'all', args={'must_complete': bool})
 def all_tod(args):
     tods_list = []
-    for tod in TOD.objects.filter(reject = False):
+    for tod in TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
         tods_list.append(tod.json_response())
     return {'all_truths_or_dares': tods_list}
 ```
-> A success JSON response example: 
+> A success JSON response example (`must_complete` = False): 
 ```
 {
   "all_truths_or_dares": [
@@ -238,6 +236,22 @@ def all_tod(args):
   ]
 }
 ```
+> Another success JSON response example (`must_complete` = True):
+```
+{
+  "all_truths_or_dares": [
+    {
+      "id": 1,
+      "statement": "State five of your weird habits",
+      "truth": true,
+      "dare": false,
+      "must_complete": true,
+      "check_complete": false,
+      "reject": false
+    }
+  ]
+}
+```
 
 ---
 
@@ -270,15 +284,15 @@ def one_tod(args):
 
 4. **`/random`**
 ```
-@route_get(BASE_URL + 'random')
+@route_get(BASE_URL + 'random', args={'must_complete': bool})
 def random_tod(args):
-    if TOD.objects.filter(reject = False):
-        random_tod = TOD.objects.filter(reject = False).order_by('?').first()
+    if TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
+        random_tod = TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']).order_by('?').first()
         return {'random_truth_or_dare': random_tod.json_response()}
     else: 
         return {'error': 'No truth or dare exists'}
 ```
-> A success JSON response example: 
+> A success JSON response example (`must_complete` = False): 
 ```
 {
   "random_truth_or_dare": {
@@ -287,6 +301,20 @@ def random_tod(args):
     "truth": false,
     "dare": true,
     "must_complete": false,
+    "check_complete": false,
+    "reject": false
+  }
+}
+```
+> Another success JSON response example (`must_complete` = True): 
+```
+{
+  "random_truth_or_dare": {
+    "id": 6,
+    "statement": "What is your biggest fear?",
+    "truth": true,
+    "dare": false,
+    "must_complete": true,
     "check_complete": false,
     "reject": false
   }
@@ -356,23 +384,23 @@ def reject_tod(args):
 
 7. **`/all/truth`**
 ```
-@route_get(BASE_URL + 'all/truth')
+@route_get(BASE_URL + 'all/truth', args={'must_complete': bool})
 def all_truths(args):
     truth_list = []
-    if TOD.objects.filter(truth = True).exists():
-        for tods in TOD.objects.filter(truth = True).filter(reject = False):
+    if TOD.objects.filter(truth = True).filter(must_complete = args['must_complete']).exists():
+        for tods in TOD.objects.filter(truth = True).filter(reject = False).filter(must_complete = args['must_complete']):
             truth_list.append(tods.json_response())
         return {'all_truths': truth_list}
     else:
         return {'error': 'No truth statements found'}
 ```
-> A success JSON response example:
+> A success JSON response example (`must_complete` = False):
 ```
 {
   "all_truths": [
     {
-      "id": 1,
-      "statement": "State five of your weird habits",
+      "id": 3,
+      "statement": "When was the last time you lied?",
       "truth": true,
       "dare": false,
       "must_complete": false,
@@ -382,15 +410,6 @@ def all_truths(args):
     {
       "id": 5,
       "statement": "What’s the most embarrassing problem you’ve gone to the doctor for?",
-      "truth": true,
-      "dare": false,
-      "must_complete": true,
-      "check_complete": false,
-      "reject": false
-    },
-    {
-      "id": 6,
-      "statement": "What is your biggest fear?",
       "truth": true,
       "dare": false,
       "must_complete": false,
@@ -409,23 +428,38 @@ def all_truths(args):
   ]
 }
 ```
-
+> Another success JSON response example (`must_complete` = True): 
+```
+{
+  "all_truths": [
+    {
+      "id": 6,
+      "statement": "What is your biggest fear?",
+      "truth": true,
+      "dare": false,
+      "must_complete": true,
+      "check_complete": false,
+      "reject": false
+    }
+  ]
+}
+```
 
 ---
 
 8. **`/all/dare`**
 ```
-@route_get(BASE_URL + 'all/dare')
+@route_get(BASE_URL + 'all/dare', args={'must_complete': bool})
 def all_dares(args):
     dare_list = []
-    if TOD.objects.filter(dare = True).exists():
-        for tods in TOD.objects.filter(dare = True).filter(reject = False):
+    if TOD.objects.filter(dare = True).filter(must_complete = args['must_complete']).exists():
+        for tods in TOD.objects.filter(dare = True).filter(reject = False).filter(must_complete = args['must_complete']):
             dare_list.append(tods.json_response())
         return {'all_dares': dare_list}
     else:
         return {'error': 'No dare statements found'}
 ```
-> A success JSON response example:
+> A success JSON response example (`must_complete` = False):
 ```
 {
   "all_dares": [
@@ -462,6 +496,22 @@ def all_dares(args):
       "truth": false,
       "dare": true,
       "must_complete": false,
+      "check_complete": false,
+      "reject": false
+    }
+  ]
+}
+```
+> Another success JSON response example (`must_complete` = True): 
+```
+{
+  "all_dares": [
+    {
+      "id": 8,
+      "statement": "Show the most embarrassing photo on your phone",
+      "truth": false,
+      "dare": true,
+      "must_complete": true,
       "check_complete": false,
       "reject": false
     }
@@ -642,9 +692,9 @@ Here is a table summarizing the meaning and usage of each route/endpoint.
 | **Route Name** | **HTTP Method** | **Payload** | **Description** | **Error JSON Response** |
 |---|---|---|---|---|
 | `/new` | `POST` | args={'statement':str, 'truth':bool, 'dare':bool} | Allows users to add a new truth or dare statement to the database. Requires a statement text and boolean values for truth or dare. | / |
-| `/all` | `GET` | / | Retrieves all truth or dare statements from the database. | / |
+| `/all` | `GET` | args={'must_complete':bool} | Retrieves all truth or dare statements from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return all of the statements in the database. | / |
 | `/one` | `GET` | args={'id':int} | Retrieves a specific truth or dare statement by its unique id. | 'error': 'No truth or dare exists' |
-| `/random` | `GET` | / | Returns a random truth or dare statement from the database. | / |
+| `/random` | `GET` | args={'must_complete':bool} | Returns a random truth or dare statement from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return statements in the database randomly. | / |
 | `/change_complete` | `POST` | args={'id':int} | Updates the completion status (`check_complete` field, false to true) of a specified statement by id and the `must_complete` field from true to false (since the statement is completed). | 'error': 'No truth or dare exists' |
 | `/reject` | `POST` | args={'id':int} | Rejects and archives a specified truth or dare statement by id, removing it from active use in one round of game. Then a random statement will be generated from the database for the user to respond to. The `must_complete` field is set from false to true, indicating that the generated statement is mandatory for the player to complete. | 'error': 'No truth or dare exists' |
 | `/all/truth` | `GET` | / | Retrieves all statements categorized as truths (true for the `truth` field). | 'error': 'No truth statements found' |
@@ -655,6 +705,32 @@ Here is a table summarizing the meaning and usage of each route/endpoint.
 ---
 
 ## Setup
+💻 **Clone the repository in the `unit03_networking` folder.** Change `yourgithubusername` to the actual Github username before the download.
+```
+cd ~/desktop/making_with_code/unit03_networking/
+git clone https://github.com/the-isf-academy/project_networking_backend_yourgithubusername.git
+cd project_networking_project_networking_backend_yourgithubusername
+```
+
+💻 **Install necessary requirements for packages.**
+```
+poetry update
+```
+
+💻 **Enter the poetry shell.**
+```
+poetry shell
+```
+
+💻 **Enter the banjo debug to enable the routes.**
+```
+banjo --debug
+```
+
+💻 **Open up HTTPie for the interaction with the API.**
+
+💻 **In HTTPie, on the top bar, enter http://127.0.0.1:5000/TOD in order to access the server.**
+
 
 ### Contents
 
@@ -667,6 +743,3 @@ Here's what is included:
 
 **To start a Banjo server:** `banjo` 
 - [Banjo Documentation](https://the-isf-academy.github.io/banjo_docs/)
-
-
-
