@@ -1,9 +1,6 @@
 # Project Networking
 
 
-> **Don't forget to edit this `README.md` file**
->
-> If you're interested in how to format markdown, click [here](https://www.markdownguide.org/basic-syntax/#images-1)
 
 ## API Overview
 A **"Truth or Dare"** game is usually played within friend groups to encourage people to say things that they may not be willing to tell in a normal setting (truths) or to do something they may not normally do for other people's enjoyment (dare). 
@@ -107,7 +104,7 @@ Here is a table summarizing the meaning and usage of each method.
 ### Endpoints
 In the views.py file, there are 10 endpoints in total. 
 
-1. **`/new`**
+#### 1. **`/new`**
 ```
 @route_post(BASE_URL + 'new', args={'statement':str, 'truth':bool, 'dare':bool})
 def new_tod(args):
@@ -139,14 +136,17 @@ def new_tod(args):
 
 ---
 
-2. **`/all`**
+#### 2. **`/all`**
 ```
 @route_get(BASE_URL + 'all', args={'must_complete': bool})
 def all_tod(args):
     tods_list = []
-    for tod in TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
-        tods_list.append(tod.json_response())
-    return {'all_truths_or_dares': tods_list}
+    if TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']).exist():
+        for tod in TOD.objects.filter(reject = False).filter(must_complete = args['must_complete']):
+            tods_list.append(tod.json_response())
+        return {'all_truths_or_dares': tods_list}
+    else: 
+        return {'error': 'No truth or dare exists'}
 ```
 > A success JSON response example (`must_complete` = False): 
 ```
@@ -255,7 +255,7 @@ def all_tod(args):
 
 ---
 
-3. **`/one`**
+#### 3. **`/one`**
 ```
 @route_get(BASE_URL + 'one', args={'id': int})
 def one_tod(args):
@@ -282,7 +282,7 @@ def one_tod(args):
 
 ---
 
-4. **`/random`**
+#### 4. **`/random`**
 ```
 @route_get(BASE_URL + 'random', args={'must_complete': bool})
 def random_tod(args):
@@ -323,7 +323,7 @@ def random_tod(args):
 
 ---
 
-5. **`/change_complete`**
+#### 5. **`/change_complete`**
 ```
 @route_post(BASE_URL + 'change_complete', args={'id':int})
 def complete_tod(args):
@@ -352,7 +352,7 @@ def complete_tod(args):
 
 ---
 
-6. **`/reject`**
+#### 6. **`/reject`**
 ```
 @route_post(BASE_URL + 'reject', args={'id':int})
 def reject_tod(args):
@@ -382,7 +382,7 @@ def reject_tod(args):
 
 ---
 
-7. **`/all/truth`**
+#### 7. **`/all/truth`**
 ```
 @route_get(BASE_URL + 'all/truth', args={'must_complete': bool})
 def all_truths(args):
@@ -447,7 +447,7 @@ def all_truths(args):
 
 ---
 
-8. **`/all/dare`**
+#### 8. **`/all/dare`**
 ```
 @route_get(BASE_URL + 'all/dare', args={'must_complete': bool})
 def all_dares(args):
@@ -521,19 +521,19 @@ def all_dares(args):
 
 ---
 
-9. **`/search`**
+#### 9. **`/search`**
 ```
-@route_get(BASE_URL + 'search', args={'keyword':str})
+@route_get(BASE_URL + 'search', args={'keyword':str, 'must_complete': bool})
 def search_tods(args):
     search_list = []
-    if TOD.objects.filter(statement__contains = args['keyword']).filter(reject = False).exists():
-        for search in TOD.objects.filter(statement__contains = args['keyword']).filter(reject = False):
+    if TOD.objects.filter(statement__contains = args['keyword']).filter(reject = False).filter(must_complete = args['must_complete']).exists():
+        for search in TOD.objects.filter(statement__contains = args['keyword']).filter(reject = False).filter(must_complete = args['must_complete']):
             search_list.append(search.json_response())
         return {'search_list': search_list}
     else:
         return {'search_list': 'No truth or dare exists'}
 ```
-> A success JSON response example:
+> A success JSON response example (`must_complete` = False):
 ```
 {
   "search_list": [
@@ -576,10 +576,26 @@ def search_tods(args):
   ]
 }
 ```
+> Another success JSON response example (`must_complete` = True):
+```
+{
+  "search_list": [
+    {
+      "id": 6,
+      "statement": "What is your biggest fear?",
+      "truth": true,
+      "dare": false,
+      "must_complete": true,
+      "check_complete": false,
+      "reject": false
+    }
+  ]
+}
+```
 
 ---
 
-10. **`/reset_game`**
+#### 10. **`/reset_game`**
 ```
 @route_post(BASE_URL + 'reset_game')
 def reset_tods(args):
@@ -692,14 +708,14 @@ Here is a table summarizing the meaning and usage of each route/endpoint.
 | **Route Name** | **HTTP Method** | **Payload** | **Description** | **Error JSON Response** |
 |---|---|---|---|---|
 | `/new` | `POST` | args={'statement':str, 'truth':bool, 'dare':bool} | Allows users to add a new truth or dare statement to the database. Requires a statement text and boolean values for truth or dare. | / |
-| `/all` | `GET` | args={'must_complete':bool} | Retrieves all truth or dare statements from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return all of the statements in the database. | / |
-| `/one` | `GET` | args={'id':int} | Retrieves a specific truth or dare statement by its unique id. | 'error': 'No truth or dare exists' |
-| `/random` | `GET` | args={'must_complete':bool} | Returns a random truth or dare statement from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return statements in the database randomly. | / |
+| `/all` | `GET` | args={'must_complete':bool} | Retrieves all truth or dare statements from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return all of the statements in the database. | 'error': 'No truth or dare exists' |
+| `/one` | `GET` | args={'id': int, 'must_complete': bool} | Retrieves a specific truth or dare statement by its unique id. | 'error': 'No truth or dare exists' |
+| `/random` | `GET` | args={'must_complete': bool} | Returns a random truth or dare statement from the database, with the must_complete field set as either true or false. During a round of game, only the chosen statement will be shown when a player tries to use this endpoint. When the game is reset, this endpoint will return statements in the database randomly. | / |
 | `/change_complete` | `POST` | args={'id':int} | Updates the completion status (`check_complete` field, false to true) of a specified statement by id and the `must_complete` field from true to false (since the statement is completed). | 'error': 'No truth or dare exists' |
 | `/reject` | `POST` | args={'id':int} | Rejects and archives a specified truth or dare statement by id, removing it from active use in one round of game. Then a random statement will be generated from the database for the user to respond to. The `must_complete` field is set from false to true, indicating that the generated statement is mandatory for the player to complete. | 'error': 'No truth or dare exists' |
-| `/all/truth` | `GET` | / | Retrieves all statements categorized as truths (true for the `truth` field). | 'error': 'No truth statements found' |
-| `/all/dare` | `GET` | / | Retrieves all statements categorized as dares (true for the `dare` field). | 'error': 'No dare statements found' |
-| `/search` | `GET` | args={'keyword':str} | Searches in the database for truth or dare statements that contain the specified keyword that the users put in. | 'search_list': 'No truth or dare exists' |
+| `/all/truth` | `GET` | args={'must_complete': bool} | Retrieves all statements categorized as truths (true for the `truth` field). Filters result accordingly when the `must_complete` field of the user's statement is set to true. | 'error': 'No truth statements found' |
+| `/all/dare` | `GET` | args={'must_complete': bool} | Retrieves all statements categorized as dares (true for the `dare` field). Filters result accordingly when the `must_complete` field of the user's statement is set to true. | 'error': 'No dare statements found' |
+| `/search` | `GET` | args={'keyword':str, 'must_complete': bool} | Searches in the database for truth or dare statements that contain the specified keyword that the users put in. Filters search result accordingly when the `must_complete` field of the user's statement is set to true. | 'search_list': 'No truth or dare exists' |
 | `/reset_game` | `POST` | / | Resets the game state, potentially clearing all completed or archived statements, setting all fields back to the original state, then returning a full list of the statements in the database. | 'error': 'No truth or dare exists' |
 
 ---
